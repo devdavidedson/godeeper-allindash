@@ -6,9 +6,9 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
 
-  // Rolagem automática quando novas mensagens são carregadas
+  // Rolagem automática quando novas mensagens são carregadas (instantâneo, sem animação)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView();
   }, [messages]);
 
   // Marca a conversa como lida quando ela é aberta
