@@ -98,7 +98,6 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
             <ChatMessage
               key={message.id}
               message={message}
-              isCurrentUser={message.sender_type === 'human' && !message.agent_human}
             />
           ))
         )}
