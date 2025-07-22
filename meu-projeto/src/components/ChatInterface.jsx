@@ -50,7 +50,10 @@ const ChatInterface = () => {
               filter: `conversation_id=eq.${activeConversation.conv_id}`
             }, 
             (payload) => {
-              setMessages(current => [...current, payload.new]);
+              setMessages(curr => {
+                const exists = curr.some(m => m.id === payload.new.id);
+                return exists ? curr : [...curr, payload.new];
+              });
             }
         )
         .subscribe();

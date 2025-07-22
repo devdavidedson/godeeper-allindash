@@ -117,6 +117,21 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
 
       if (error) throw error;
 
+      // Envia informações ao webhook externo
+      try {
+        await fetch('https://dinastia-n8n-webhook.aufaxk.easypanel.host/webhook/resposta-human', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: userName || 'Você',
+            conversation_id: activeConversation.conv_id,
+            content: newMessage.trim(),
+          }),
+        });
+      } catch (webErr) {
+        console.error('Falha ao chamar webhook:', webErr);
+      }
+
       // Atualiza a hora da última mensagem e incrementa contador não lido
       await supabase
         .from('conversations')

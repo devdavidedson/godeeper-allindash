@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import logo from '../assets/image/4.png';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 const menuItems = [
   { id: 'home', label: 'Home', icon: HomeIcon, path: '/home' },
@@ -14,6 +15,12 @@ const menuItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
 
   const toggle = () => setCollapsed((c) => !c);
 
@@ -59,7 +66,7 @@ export default function Sidebar() {
 
       {/* Logout */}
       <div className="px-2 mb-4">
-        <button className="flex items-center w-full gap-3 rounded-lg px-3 py-3 text-sm text-text-secondary bg-transparent hover:bg-surface focus:outline-none">
+        <button onClick={handleLogout} className="flex items-center w-full gap-3 rounded-lg px-3 py-3 text-sm text-text-secondary bg-transparent hover:bg-surface focus:outline-none">
           <LogoutIcon className="w-6 h-6" />
           {!collapsed && <span>Sair</span>}
         </button>
