@@ -4,7 +4,83 @@ import { supabase } from '../supabase';
 
 const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) => {
   const [newMessage, setNewMessage] = useState('');
+  const [userName, setUserName] = useState('');
+  const [agentChecked, setAgentChecked] = useState(true);
   const messagesEndRef = useRef(null);
+
+  // Obtém nome do usuário autenticado
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('attendants')
+          .select('name')
+          .eq('id_users', user.id)
+          .single();
+        if (!error && data) {
+          setUserName(data.name);
+        }
+      }
+    };
+    fetchUserName();
+  }, []);
+
+  // Quando conversa muda, verifica agent_human da última mensagem human
+  useEffect(() => {
+    const checkAgentStatus = async () => {
+      if (!activeConversation?.conv_id) return;
+      const { data, error } = await supabase
+        .from('messages')
+        .select('agent_human')
+        .eq('conversation_id', activeConversation.conv_id)
+        .eq('sender_type', 'human')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.error('Erro ao buscar agent_human:', error);
+        return;
+      }
+      // Regra: se FALSE -> checkbox true, se TRUE -> checkbox false, sem row -> true
+      if (!data) {
+        setAgentChecked(true);
+      } else {
+        setAgentChecked(data.agent_human === false);
+      }
+    };
+    checkAgentStatus();
+  }, [activeConversation]);
+
+  const handleAgentToggle = async (e) => {
+    const checked = e.target.checked;
+    setAgentChecked(checked);
+    if (!activeConversation?.conv_id) return;
+    // Busca a ultima mensagem human
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id')
+      .eq('conversation_id', activeConversation.conv_id)
+      .eq('sender_type', 'human')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error('Erro ao localizar mensagem para atualizar agent_human:', error);
+      return;
+    }
+    if (data) {
+      const { error: updError } = await supabase
+        .from('messages')
+        .update({ agent_human: false })
+        .eq('id', data.id);
+      if (updError) {
+        console.error('Erro ao atualizar agent_human para FALSE:', updError);
+      }
+    }
+  };
 
   // Rolagem automática quando novas mensagens são carregadas (instantâneo, sem animação)
   useEffect(() => {
@@ -34,8 +110,9 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
       const { error } = await supabase.from('messages').insert({
         conversation_id: activeConversation.conv_id,
         sender_type: 'human',
+        agent_human: true,
         content: newMessage.trim(),
-        name: 'Você',
+        name: userName || 'Você',
       });
 
       if (error) throw error;
@@ -49,6 +126,7 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
         .eq('id', activeConversation.conv_id);
 
       setNewMessage('');
+      setAgentChecked(false);
       fetchMessages(activeConversation.conv_id);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -68,8 +146,12 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
   if (loading) {
     return (
       <div className="flex-1 flex flex-col bg-gray-900 h-full">
-        <div className="p-4 border-b border-gray-700 bg-gray-800">
+        <div className="p-4 border-b border-gray-700 bg-gray-800 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">{activeConversation.conv_name}</h2>
+          <label className="flex items-center gap-2 text-xl text-white">
+            <input type="checkbox" className="form-checkbox text-primary w-5 h-5" checked={agentChecked} onChange={handleAgentToggle} />
+            Ativar Agente
+          </label>
         </div>
         <div className="flex-1 p-4">
           <div className="animate-pulse flex flex-col space-y-4">
@@ -84,8 +166,12 @@ const ChatWindow = ({ activeConversation, messages, loading, fetchMessages }) =>
 
   return (
     <div className="flex-1 flex flex-col bg-gray-900 h-full">
-      <div className="p-4 border-b border-gray-700 bg-gray-800">
+      <div className="p-4 border-b border-gray-700 bg-gray-800 flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">{activeConversation.conv_name}</h2>
+        <label className="flex items-center gap-2 text-xl text-white">
+          <input type="checkbox" className="form-checkbox text-primary w-5 h-5" checked={agentChecked} onChange={handleAgentToggle} />
+          Ativar Agente
+        </label>
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto">
