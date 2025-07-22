@@ -113,7 +113,7 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
+    <div className="flex h-screen bg-cosmic text-text-primary">
       <ChatSidebar 
         conversations={conversations}
         activeConversation={activeConversation}
