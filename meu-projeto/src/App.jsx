@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AuthPage from './pages/AuthPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ChatInterface from './components/ChatInterface';
+import HomePage from './pages/HomePage';
 
 // Layout com Sidebar fixo
 function AppLayout() {
@@ -27,10 +30,11 @@ function Placeholder({ title }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Navigate to="/auth" replace />} />
-          <Route path="home" element={<Placeholder title="Home" />} />
+          <Route path="home" element={<HomePage />} />
           <Route path="dashboard" element={<Placeholder title="Dashboard" />} />
           <Route path="conversas" element={<ChatInterface />} />
           <Route path="configuracoes" element={<Placeholder title="Configurações" />} />
